@@ -22,14 +22,24 @@ def softmax_loss_naive(W, X, y, reg):
   # Initialize the loss and gradient to zero.
   loss = 0.0
   dW = np.zeros_like(W)
-
+  
   #############################################################################
   # TODO: Compute the softmax loss and its gradient using explicit loops.     #
   # Store the loss in loss and the gradient in dW. If you are not careful     #
   # here, it is easy to run into numeric instability. Don't forget the        #
   # regularization!                                                           #
   #############################################################################
-  pass
+  N, C = X.shape[0], W.shape[1]
+  for i in range(N):
+      f = np.dot(X[i], W)
+      f -= np.max(f) # f.shape = C
+      loss = loss + np.log(np.sum(np.exp(f))) - f[y[i]]
+      dW[:, y[i]] -= X[i]
+      s = np.exp(f).sum()
+      for j in range(C):
+          dW[:, j] += np.exp(f[j]) / s * X[i]
+  loss = loss / N + 0.5 * reg * np.sum(W * W)
+  dW = dW / N + reg * W
   #############################################################################
   #                          END OF YOUR CODE                                 #
   #############################################################################
@@ -46,14 +56,27 @@ def softmax_loss_vectorized(W, X, y, reg):
   # Initialize the loss and gradient to zero.
   loss = 0.0
   dW = np.zeros_like(W)
-
+  C=W.shape[1]
+  N=X.shape[0]
   #############################################################################
   # TODO: Compute the softmax loss and its gradient using no explicit loops.  #
   # Store the loss in loss and the gradient in dW. If you are not careful     #
   # here, it is easy to run into numeric instability. Don't forget the        #
   # regularization!                                                           #
   #############################################################################
-  pass
+  score=X.dot(W)
+  score=np.power(np.exp(1),score-score.max())
+  score=score/score.sum(axis=1).reshape((N,1)).dot(np.ones((1,C)))
+  score=-np.log(score)[np.arange(N),y]
+  loss=score.sum()/N+reg*np.sum(W*W)
+
+  S=X.dot(W)
+  counts= np.exp(S)/np.exp(S).sum(axis=1).reshape(N,1)
+  counts[range(N), y] -= 1
+  dW = np.dot(X.T, counts)
+
+  loss = loss / N + 0.5 * reg * np.sum(W * W)
+  dW = dW / N + reg * W
   #############################################################################
   #                          END OF YOUR CODE                                 #
   #############################################################################
